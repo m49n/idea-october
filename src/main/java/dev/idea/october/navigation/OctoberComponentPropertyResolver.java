@@ -52,8 +52,14 @@ public final class OctoberComponentPropertyResolver {
 
         return collectTopLevelEntries(methodBody.get(), arrayOpenOffset).stream()
             .map(entry -> {
-                DefaultValue defaultValue = extractDefaultValue(entry.valueText());
-                return new OctoberComponentProperty(entry.key(), defaultValue.value(), defaultValue.quoted());
+                PropertyMetadata metadata = extractMetadata(entry.valueText());
+                return new OctoberComponentProperty(
+                    entry.key(),
+                    metadata.title(),
+                    metadata.type(),
+                    metadata.defaultValue().value(),
+                    metadata.defaultValue().quoted()
+                );
             })
             .toList();
     }
@@ -173,19 +179,26 @@ public final class OctoberComponentPropertyResolver {
         return text.length();
     }
 
-    private static DefaultValue extractDefaultValue(String propertyValueText) {
+    private static PropertyMetadata extractMetadata(String propertyValueText) {
         int arrayOpenOffset = findArrayOpenOffset(propertyValueText);
         if (arrayOpenOffset < 0) {
-            return DefaultValue.none();
+            return PropertyMetadata.empty();
         }
 
+        String title = null;
+        String type = null;
+        DefaultValue defaultValue = DefaultValue.none();
         for (ArrayEntry entry : collectTopLevelEntries(propertyValueText, arrayOpenOffset)) {
-            if ("default".equals(entry.key())) {
-                return parseDefaultValue(entry.valueText());
+            switch (entry.key()) {
+                case "title" -> title = parseStringValue(entry.valueText()).orElse(null);
+                case "type" -> type = parseStringValue(entry.valueText()).orElse(null);
+                case "default" -> defaultValue = parseDefaultValue(entry.valueText());
+                default -> {
+                }
             }
         }
 
-        return DefaultValue.none();
+        return new PropertyMetadata(title, type, defaultValue);
     }
 
     private static int findArrayOpenOffset(String text) {
@@ -226,6 +239,20 @@ public final class OctoberComponentPropertyResolver {
         }
 
         return DefaultValue.none();
+    }
+
+    private static Optional<String> parseStringValue(String valueText) {
+        String trimmed = valueText.trim();
+        if (trimmed.isEmpty()) {
+            return Optional.empty();
+        }
+
+        char first = trimmed.charAt(0);
+        if (first == '\'' || first == '"') {
+            return Optional.of(readStringLiteral(trimmed, 0).value());
+        }
+
+        return Optional.empty();
     }
 
     private static StringLiteral readStringLiteral(String text, int quoteOffset) {
@@ -291,6 +318,16 @@ public final class OctoberComponentPropertyResolver {
     private record DefaultValue(@Nullable String value, boolean quoted) {
         static DefaultValue none() {
             return new DefaultValue(null, true);
+        }
+    }
+
+    private record PropertyMetadata(
+        @Nullable String title,
+        @Nullable String type,
+        @NotNull DefaultValue defaultValue
+    ) {
+        static PropertyMetadata empty() {
+            return new PropertyMetadata(null, null, DefaultValue.none());
         }
     }
 }

@@ -15,13 +15,15 @@
             implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
         <completion.contributor
             language="HTML"
-            implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
+            implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor"
+            order="first" />
         <completion.contributor
             language="XML"
             implementationClass="dev.idea.october.navigation.OctoberPhpSectionCompletionContributor" />
         <completion.contributor
             language="XML"
-            implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
+            implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor"
+            order="first" />
         <completion.contributor
             language="PHP"
             implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />

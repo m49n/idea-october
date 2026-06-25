@@ -29,7 +29,7 @@ public final class OctoberMissingComponentInspection extends LocalInspectionTool
 
     private static void inspectFile(@NotNull PsiFile file, @NotNull ProblemsHolder holder) {
         VirtualFile currentFile = file.getVirtualFile();
-        if (currentFile == null || !isThemeTemplate(currentFile)) {
+        if (currentFile == null || !OctoberInspectionFile.shouldInspectThemeTemplate(file)) {
             return;
         }
 
@@ -45,18 +45,5 @@ public final class OctoberMissingComponentInspection extends LocalInspectionTool
                 match.rangeInFile()
             );
         }
-    }
-
-    private static boolean isThemeTemplate(@NotNull VirtualFile file) {
-        VirtualFile current = file.getParent();
-        while (current != null) {
-            VirtualFile parent = current.getParent();
-            if (parent != null && "themes".equalsIgnoreCase(parent.getName())) {
-                return true;
-            }
-            current = parent;
-        }
-
-        return false;
     }
 }

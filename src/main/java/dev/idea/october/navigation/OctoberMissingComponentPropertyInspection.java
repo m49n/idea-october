@@ -33,7 +33,7 @@ public final class OctoberMissingComponentPropertyInspection extends LocalInspec
 
     private static void inspectFile(@NotNull PsiFile file, @NotNull ProblemsHolder holder) {
         VirtualFile currentFile = file.getVirtualFile();
-        if (currentFile == null || !isThemeTemplate(currentFile)) {
+        if (currentFile == null || !OctoberInspectionFile.shouldInspectThemeTemplate(file)) {
             return;
         }
 
@@ -54,8 +54,7 @@ public final class OctoberMissingComponentPropertyInspection extends LocalInspec
 
             holder.registerProblem(
                 file,
-                "October component property '" + assignment.propertyName() + "' not found on '"
-                    + assignment.componentAlias() + "'",
+                problemMessage(assignment, properties),
                 ProblemHighlightType.LIKE_UNKNOWN_SYMBOL,
                 assignment.rangeInFile()
             );
@@ -66,16 +65,21 @@ public final class OctoberMissingComponentPropertyInspection extends LocalInspec
         return properties.stream().anyMatch(property -> property.name().equals(propertyName));
     }
 
-    private static boolean isThemeTemplate(@NotNull VirtualFile file) {
-        VirtualFile current = file.getParent();
-        while (current != null) {
-            VirtualFile parent = current.getParent();
-            if (parent != null && "themes".equalsIgnoreCase(parent.getName())) {
-                return true;
-            }
-            current = parent;
-        }
+    private static String problemMessage(
+        OctoberComponentPropertyAssignmentScanner.Assignment assignment,
+        List<OctoberComponentProperty> properties
+    ) {
+        return "October component property '" + assignment.propertyName() + "' not found on '"
+            + assignment.componentAlias() + "'. Available: " + availableProperties(properties);
+    }
 
-        return false;
+    private static String availableProperties(List<OctoberComponentProperty> properties) {
+        return String.join(
+            ", ",
+            properties.stream()
+                .map(OctoberComponentProperty::name)
+                .sorted()
+                .toList()
+        );
     }
 }

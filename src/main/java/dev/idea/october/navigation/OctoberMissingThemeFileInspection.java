@@ -42,7 +42,7 @@ public final class OctoberMissingThemeFileInspection extends LocalInspectionTool
 
     private static void inspectFile(@NotNull PsiFile file, @NotNull ProblemsHolder holder) {
         VirtualFile currentFile = file.getVirtualFile();
-        if (currentFile == null || findThemeRoot(currentFile).isEmpty()) {
+        if (currentFile == null || !OctoberInspectionFile.shouldInspectThemeTemplate(file)) {
             return;
         }
 

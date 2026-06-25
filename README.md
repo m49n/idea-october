@@ -84,6 +84,7 @@ sl
 ```
 
 The suggestions are read from the component class `defineProperties()` method.
+Completion items show the property `title`, `type`, and declared `default` value when available.
 Selecting a property inserts the assignment with its `default` value when one is declared:
 
 ```ini
@@ -93,6 +94,7 @@ slug = "{{ :slug }}"
 The caret is placed inside the value so it can be edited immediately.
 
 - Unknown component properties are highlighted when the component declares available properties.
+  The tooltip includes the list of allowed property names.
 
 ### Pages
 

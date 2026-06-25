@@ -102,8 +102,12 @@ class OctoberComponentPropertyResolverTest {
         assertEquals("slug", properties.get(0).name());
         assertEquals("{{ :slug }}", properties.get(0).defaultValue());
         assertTrue(properties.get(0).quotedDefaultValue());
+        assertEquals("Slug", properties.get(0).title());
+        assertEquals("string", properties.get(0).type());
         assertEquals("enabled", properties.get(1).name());
         assertEquals("1", properties.get(1).defaultValue());
         assertFalse(properties.get(1).quotedDefaultValue());
+        assertEquals("Enabled", properties.get(1).title());
+        assertEquals("checkbox", properties.get(1).type());
     }
 }

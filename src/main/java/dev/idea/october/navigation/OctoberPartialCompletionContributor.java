@@ -149,13 +149,31 @@ public final class OctoberPartialCompletionContributor extends CompletionContrib
         )) {
             prefixedResult.addElement(
                 LookupElementBuilder.create(property.name())
-                    .withTypeText("October component property", true)
+                    .withTailText(componentPropertyTailText(property), true)
+                    .withTypeText(componentPropertyTypeText(property), true)
                     .withInsertHandler((insertionContext, item) -> insertComponentPropertyAssignment(
                         insertionContext,
                         property
                     ))
             );
         }
+    }
+
+    private static String componentPropertyTailText(OctoberComponentProperty property) {
+        StringBuilder tailText = new StringBuilder();
+        if (property.title() != null && !property.title().isBlank()) {
+            tailText.append(' ').append(property.title());
+        }
+        if (property.defaultValue() != null && !property.defaultValue().isBlank()) {
+            tailText.append(' ').append("default: ").append(property.defaultValue());
+        }
+        return tailText.toString();
+    }
+
+    private static String componentPropertyTypeText(OctoberComponentProperty property) {
+        return property.type() == null || property.type().isBlank()
+            ? "October component property"
+            : property.type();
     }
 
     private static void insertComponentPropertyAssignment(

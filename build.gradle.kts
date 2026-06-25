@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dev.idea.october"
-version = "0.1.27"
+version = "0.1.29"
 
 java {
     toolchain {
@@ -47,7 +47,7 @@ intellijPlatform {
         name.set("October CMS Support")
         version.set(project.version.toString())
         description.set("Base PhpStorm plugin scaffold for October CMS support.")
-        changeNotes.set("Insert component property defaults and suppress HTML noise in property completion.")
+        changeNotes.set("Show component property metadata and prioritize October property completion.")
 
         ideaVersion {
             sinceBuild.set("253")

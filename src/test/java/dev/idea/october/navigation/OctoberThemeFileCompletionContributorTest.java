@@ -252,9 +252,92 @@ public class OctoberThemeFileCompletionContributorTest extends BasePlatformTestC
         Set<String> lookupStrings = lookupStrings();
         assertTrue("lookup=" + lookupStrings, lookupStrings.contains("slug"));
         assertTrue("lookup=" + lookupStrings, lookupStrings.contains("category"));
-        assertEquals("October component property", lookupTypeText("slug"));
+        assertEquals("string", lookupTypeText("slug"));
+        assertEquals(" Slug", lookupTailText("slug"));
         assertFalse(lookupStrings.contains("title"));
         assertFalse(lookupStrings.contains("type"));
+        assertFalse(lookupStrings.contains("style"));
+        assertFalse(lookupStrings.contains("<style"));
+        assertFalse(lookupStrings.contains("script"));
+        assertFalse(lookupStrings.contains("<script"));
+    }
+
+    public void testCompletesPropertiesForCurrentComponentBlockOnly() {
+        myFixture.addFileToProject("plugins/webinsane/bcc/components/PressCenterPostsComponent.php", """
+            <?php
+
+            namespace Webinsane\\Bcc\\Components;
+
+            class PressCenterPostsComponent
+            {
+                public function defineProperties()
+                {
+                    return [
+                        'slug' => [
+                            'title' => 'Slug',
+                            'type' => 'string',
+                        ],
+                    ];
+                }
+            }
+            """);
+        myFixture.addFileToProject("plugins/webinsane/bcc/components/AboutPages.php", """
+            <?php
+
+            namespace Webinsane\\Bcc\\Components;
+
+            class AboutPages
+            {
+                public function defineProperties()
+                {
+                    return [
+                        'headline' => [
+                            'title' => 'Headline',
+                            'type' => 'string',
+                        ],
+                        'heroTitle' => [
+                            'title' => 'Hero title',
+                            'type' => 'string',
+                        ],
+                    ];
+                }
+            }
+            """);
+        myFixture.addFileToProject("plugins/webinsane/bcc/Plugin.php", """
+            <?php
+
+            namespace Webinsane\\Bcc;
+
+            use Webinsane\\Bcc\\Components\\AboutPages;
+            use Webinsane\\Bcc\\Components\\PressCenterPostsComponent;
+
+            class Plugin
+            {
+                public function registerComponents()
+                {
+                    return [
+                        PressCenterPostsComponent::class => 'PressCenterPosts',
+                        AboutPages::class => 'AboutPages',
+                    ];
+                }
+            }
+            """);
+        PsiFile page = myFixture.addFileToProject("themes/bcc/pages/home.htm", """
+            url = "/"
+            [PressCenterPosts]
+            slug = "{{ :slug }}"
+            [AboutPages]
+            h<caret>
+            ==
+            """);
+        myFixture.configureFromExistingVirtualFile(page.getVirtualFile());
+
+        myFixture.completeBasic();
+
+        Set<String> lookupStrings = lookupStrings();
+        assertTrue("lookup=" + lookupStrings, lookupStrings.contains("headline"));
+        assertTrue("lookup=" + lookupStrings, lookupStrings.contains("heroTitle"));
+        assertFalse(lookupStrings.contains("slug"));
         assertFalse(lookupStrings.contains("style"));
         assertFalse(lookupStrings.contains("<style"));
         assertFalse(lookupStrings.contains("script"));
@@ -374,6 +457,17 @@ public class OctoberThemeFileCompletionContributorTest extends BasePlatformTestC
             .findFirst()
             .map(LookupElementPresentation::renderElement)
             .map(LookupElementPresentation::getTypeText)
+            .orElseThrow();
+    }
+
+    private String lookupTailText(String lookupString) {
+        LookupElement[] elements = myFixture.getLookupElements();
+        assertNotNull(elements);
+        return Arrays.stream(elements)
+            .filter(element -> lookupString.equals(element.getLookupString()))
+            .findFirst()
+            .map(LookupElementPresentation::renderElement)
+            .map(LookupElementPresentation::getTailText)
             .orElseThrow();
     }
 }
