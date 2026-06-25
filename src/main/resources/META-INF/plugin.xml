@@ -1,0 +1,25 @@
+<idea-plugin>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.jetbrains.php</depends>
+    <depends>com.jetbrains.twig</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <psi.referenceContributor
+            language="Twig"
+            implementation="dev.idea.october.navigation.OctoberPartialReferenceContributor" />
+        <psi.referenceContributor
+            language="HTML"
+            implementation="dev.idea.october.navigation.OctoberPartialReferenceContributor" />
+        <completion.contributor
+            language="Twig"
+            implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
+        <completion.contributor
+            language="HTML"
+            implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
+        <completion.contributor
+            language="PHP"
+            implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
+        <gotoDeclarationHandler
+            implementation="dev.idea.october.navigation.OctoberPartialGotoDeclarationHandler" />
+    </extensions>
+</idea-plugin>
