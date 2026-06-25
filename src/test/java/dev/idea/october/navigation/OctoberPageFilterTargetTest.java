@@ -28,4 +28,18 @@ class OctoberPageFilterTargetTest {
 
         assertTrue(OctoberPageFilterTarget.find(text, caretOffset).isEmpty());
     }
+
+    @Test
+    void findsPageNameWhenCaretIsInsidePageUrlFunctionString() {
+        String text = "{{ pageUrl('about/press-center-new/post', { slug: topPost.slug }) }}";
+        int caretOffset = text.indexOf("press-center");
+
+        OctoberPageFilterTarget.Match match = OctoberPageFilterTarget.find(text, caretOffset).orElseThrow();
+
+        assertEquals("about/press-center-new/post", match.pageName());
+        assertEquals(
+            TextRange.create(text.indexOf("about/press-center-new/post"), text.indexOf("about/press-center-new/post") + 27),
+            match.rangeInFile()
+        );
+    }
 }

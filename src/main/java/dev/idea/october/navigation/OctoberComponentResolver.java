@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -46,6 +49,37 @@ public final class OctoberComponentResolver {
         return findComponentByConventionalName(pluginsRoot, alias);
     }
 
+    public static @NotNull List<String> listComponentAliases(Path currentTemplatePath) {
+        return listComponentAliasMetadata(currentTemplatePath).stream()
+            .map(OctoberComponentAlias::alias)
+            .toList();
+    }
+
+    public static @NotNull List<OctoberComponentAlias> listComponentAliasMetadata(Path currentTemplatePath) {
+        if (currentTemplatePath == null) {
+            return List.of();
+        }
+
+        Optional<Path> projectRoot = findProjectRoot(currentTemplatePath);
+        if (projectRoot.isEmpty()) {
+            return List.of();
+        }
+
+        Path pluginsRoot = projectRoot.get().resolve(PLUGINS_DIR);
+        if (!Files.isDirectory(pluginsRoot)) {
+            return List.of();
+        }
+
+        Map<String, OctoberComponentAlias> aliases = new java.util.TreeMap<>();
+        for (OctoberComponentAlias alias : listRegisteredComponentAliases(pluginsRoot)) {
+            aliases.put(alias.alias(), alias);
+        }
+        for (OctoberComponentAlias alias : listConventionalComponentAliases(pluginsRoot)) {
+            aliases.putIfAbsent(alias.alias(), alias);
+        }
+        return List.copyOf(aliases.values());
+    }
+
     private static Optional<Path> findRegisteredComponent(Path pluginsRoot, String alias) {
         if (!Files.isDirectory(pluginsRoot)) {
             return Optional.empty();
@@ -63,6 +97,51 @@ public final class OctoberComponentResolver {
         }
     }
 
+    private static List<OctoberComponentAlias> listRegisteredComponentAliases(Path pluginsRoot) {
+        try (Stream<Path> pluginFiles = Files.walk(pluginsRoot, 3)) {
+            return pluginFiles
+                .filter(path -> "Plugin.php".equals(path.getFileName().toString()))
+                .flatMap(pluginFile -> listAliasesFromPluginFile(pluginFile).stream())
+                .toList();
+        }
+        catch (IOException ignored) {
+            return List.of();
+        }
+    }
+
+    private static List<OctoberComponentAlias> listAliasesFromPluginFile(Path pluginFile) {
+        String source;
+        try {
+            source = Files.readString(pluginFile);
+        }
+        catch (IOException ignored) {
+            return List.of();
+        }
+
+        Optional<String> registerComponentsBody = OctoberPhpMethodBodyExtractor.findMethodBody(source, "registerComponents");
+        if (registerComponentsBody.isEmpty()) {
+            return List.of();
+        }
+
+        String owner = parseNamespace(source)
+            .map(namespace -> namespace.replace('\\', '.'))
+            .orElseGet(() -> ownerFromPluginPath(pluginFile));
+        Set<OctoberComponentAlias> aliases = new TreeSet<>(
+            java.util.Comparator.comparing(OctoberComponentAlias::alias)
+        );
+        Matcher classConstantMatcher = CLASS_CONSTANT_COMPONENT.matcher(registerComponentsBody.get());
+        while (classConstantMatcher.find()) {
+            aliases.add(new OctoberComponentAlias(classConstantMatcher.group(2), owner));
+        }
+
+        Matcher stringMatcher = STRING_COMPONENT.matcher(registerComponentsBody.get());
+        while (stringMatcher.find()) {
+            aliases.add(new OctoberComponentAlias(stringMatcher.group(2), owner));
+        }
+
+        return List.copyOf(aliases);
+    }
+
     private static Optional<Path> resolveFromPluginFile(Path pluginFile, String alias) {
         String source;
         try {
@@ -74,13 +153,22 @@ public final class OctoberComponentResolver {
 
         Map<String, String> imports = parseImports(source);
         String namespace = parseNamespace(source).orElse("");
+        String registerComponentsBody = OctoberPhpMethodBodyExtractor
+            .findMethodBody(source, "registerComponents")
+            .orElse("");
 
-        Optional<Path> classConstantPath = findClassConstantRegistration(pluginFile, source, imports, namespace, alias);
+        Optional<Path> classConstantPath = findClassConstantRegistration(
+            pluginFile,
+            registerComponentsBody,
+            imports,
+            namespace,
+            alias
+        );
         if (classConstantPath.isPresent()) {
             return classConstantPath;
         }
 
-        return findStringRegistration(pluginFile, source, alias);
+        return findStringRegistration(pluginFile, registerComponentsBody, alias);
     }
 
     private static Optional<Path> findClassConstantRegistration(
@@ -158,6 +246,69 @@ public final class OctoberComponentResolver {
         catch (IOException ignored) {
             return Optional.empty();
         }
+    }
+
+    private static List<OctoberComponentAlias> listConventionalComponentAliases(Path pluginsRoot) {
+        try (Stream<Path> files = Files.walk(pluginsRoot, 5)) {
+            return files
+                .filter(Files::isRegularFile)
+                .filter(path -> path.getFileName().toString().endsWith(".php"))
+                .filter(path -> isUnderComponentsDirectory(path))
+                .map(path -> new OctoberComponentAlias(aliasFromComponentFile(path), ownerFromComponentPath(path)))
+                .sorted(java.util.Comparator.comparing(OctoberComponentAlias::alias))
+                .toList();
+        }
+        catch (IOException ignored) {
+            return List.of();
+        }
+    }
+
+    private static String aliasFromComponentFile(Path path) {
+        String fileName = path.getFileName().toString();
+        String alias = fileName.substring(0, fileName.length() - ".php".length());
+        if (alias.endsWith("Component") && alias.length() > "Component".length()) {
+            return alias.substring(0, alias.length() - "Component".length());
+        }
+
+        return alias;
+    }
+
+    private static String ownerFromComponentPath(Path path) {
+        Path pluginRoot = findPluginRoot(path).orElse(null);
+        return pluginRoot == null ? "" : ownerFromPluginRoot(pluginRoot);
+    }
+
+    private static String ownerFromPluginPath(Path pluginFile) {
+        Path pluginRoot = pluginFile.getParent();
+        return pluginRoot == null ? "" : ownerFromPluginRoot(pluginRoot);
+    }
+
+    private static String ownerFromPluginRoot(Path pluginRoot) {
+        Path plugin = pluginRoot.getFileName();
+        Path author = pluginRoot.getParent() == null ? null : pluginRoot.getParent().getFileName();
+        if (author == null || plugin == null) {
+            return "";
+        }
+
+        return author + "." + plugin;
+    }
+
+    private static Optional<Path> findPluginRoot(Path path) {
+        Path current = path.toAbsolutePath().normalize();
+        while (current != null) {
+            Path parent = current.getParent();
+            Path grandParent = parent == null ? null : parent.getParent();
+            if (
+                parent != null
+                    && grandParent != null
+                    && PLUGINS_DIR.equalsIgnoreCase(grandParent.getFileName().toString())
+            ) {
+                return Optional.of(current);
+            }
+            current = parent;
+        }
+
+        return Optional.empty();
     }
 
     private static boolean isUnderComponentsDirectory(Path path) {

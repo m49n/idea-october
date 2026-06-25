@@ -10,6 +10,8 @@ public final class OctoberPartialCompletionContext {
     private static final String INTELLIJ_DUMMY_IDENTIFIER = "IntellijIdeaRulezzz";
     private static final Pattern OPEN_PARTIAL_ARGUMENT =
         Pattern.compile("\\{%\\s*(?:partial|ajaxPartial)\\s+(['\"])([^'\"]*)$");
+    private static final Pattern OPEN_PARTIAL_FUNCTION_ARGUMENT =
+        Pattern.compile("\\b(?:partial|ajaxPartial)\\s*\\(\\s*(['\"])([^'\"]*)$");
 
     private OctoberPartialCompletionContext() {
     }
@@ -19,6 +21,15 @@ public final class OctoberPartialCompletionContext {
             return Optional.empty();
         }
 
+        Optional<Context> tagContext = findTagContext(fileText, caretOffset);
+        if (tagContext.isPresent()) {
+            return tagContext;
+        }
+
+        return findFunctionContext(fileText, caretOffset);
+    }
+
+    private static @NotNull Optional<Context> findTagContext(@NotNull String fileText, int caretOffset) {
         int tagStart = fileText.lastIndexOf("{%", caretOffset);
         if (tagStart < 0) {
             return Optional.empty();
@@ -31,6 +42,16 @@ public final class OctoberPartialCompletionContext {
 
         String beforeCaret = fileText.substring(tagStart, caretOffset);
         Matcher matcher = OPEN_PARTIAL_ARGUMENT.matcher(beforeCaret);
+        if (!matcher.find()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new Context(cleanPrefix(matcher.group(2))));
+    }
+
+    private static @NotNull Optional<Context> findFunctionContext(@NotNull String fileText, int caretOffset) {
+        String beforeCaret = fileText.substring(0, caretOffset);
+        Matcher matcher = OPEN_PARTIAL_FUNCTION_ARGUMENT.matcher(beforeCaret);
         if (!matcher.find()) {
             return Optional.empty();
         }

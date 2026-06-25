@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
 public final class OctoberPageFilterTarget {
     private static final Pattern PAGE_FILTER =
         Pattern.compile("(['\"])([^'\"]+)\\1\\s*\\|\\s*page\\b");
+    private static final Pattern PAGE_URL_FUNCTION =
+        Pattern.compile("\\bpageUrl\\s*\\(\\s*(['\"])([^'\"]+)\\1");
 
     private OctoberPageFilterTarget() {
     }
@@ -19,7 +21,20 @@ public final class OctoberPageFilterTarget {
             return Optional.empty();
         }
 
-        Matcher matcher = PAGE_FILTER.matcher(fileText);
+        Optional<Match> pageFilterMatch = findMatch(PAGE_FILTER, fileText, caretOffset);
+        if (pageFilterMatch.isPresent()) {
+            return pageFilterMatch;
+        }
+
+        return findMatch(PAGE_URL_FUNCTION, fileText, caretOffset);
+    }
+
+    private static @NotNull Optional<Match> findMatch(
+        @NotNull Pattern pattern,
+        @NotNull String fileText,
+        int caretOffset
+    ) {
+        Matcher matcher = pattern.matcher(fileText);
         while (matcher.find()) {
             int start = matcher.start(2);
             int end = matcher.end(2);

@@ -17,9 +17,58 @@
             language="HTML"
             implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
         <completion.contributor
+            language="XML"
+            implementationClass="dev.idea.october.navigation.OctoberPhpSectionCompletionContributor" />
+        <completion.contributor
+            language="XML"
+            implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
+        <completion.contributor
             language="PHP"
             implementationClass="dev.idea.october.navigation.OctoberPartialCompletionContributor" />
         <gotoDeclarationHandler
             implementation="dev.idea.october.navigation.OctoberPartialGotoDeclarationHandler" />
+        <annotator
+            language=""
+            implementationClass="dev.idea.october.navigation.OctoberPhpSectionAnnotator" />
+        <postFormatProcessor
+            implementation="dev.idea.october.navigation.OctoberPhpSectionPostFormatProcessor" />
+        <enterHandlerDelegate
+            implementation="dev.idea.october.navigation.OctoberPhpSectionEnterHandler" />
+        <typedHandler
+            implementation="dev.idea.october.navigation.OctoberPhpSectionTypedHandler" />
+        <localInspection
+            language="XML"
+            shortName="OctoberMissingThemeFile"
+            displayName="Missing October CMS theme file"
+            groupName="October CMS"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="dev.idea.october.navigation.OctoberMissingThemeFileInspection" />
+        <localInspection
+            language="XML"
+            shortName="OctoberMissingComponent"
+            displayName="Missing October CMS component"
+            groupName="October CMS"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="dev.idea.october.navigation.OctoberMissingComponentInspection" />
+        <localInspection
+            language="XML"
+            shortName="OctoberMissingComponentProperty"
+            displayName="Missing October CMS component property"
+            groupName="October CMS"
+            enabledByDefault="true"
+            level="WARNING"
+            implementationClass="dev.idea.october.navigation.OctoberMissingComponentPropertyInspection" />
     </extensions>
+
+    <actions>
+        <action
+            id="dev.idea.october.FormatPhpSection"
+            class="dev.idea.october.navigation.OctoberFormatPhpSectionAction"
+            text="October CMS: Format PHP Section"
+            description="Format the PHP section in the current October CMS template">
+            <add-to-group group-id="CodeMenu" anchor="last" />
+        </action>
+    </actions>
 </idea-plugin>

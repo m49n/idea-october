@@ -33,6 +33,22 @@ public final class OctoberPartialGotoDeclarationHandler implements GotoDeclarati
             return partialTargets;
         }
 
+        PsiElement[] layoutTargets = OctoberLayoutTarget.find(documentText, offset)
+            .flatMap(match -> resolveLayout(sourceElement, match.layoutName()))
+            .map(psiFile -> new PsiElement[]{psiFile})
+            .orElse(null);
+        if (layoutTargets != null) {
+            return layoutTargets;
+        }
+
+        PsiElement[] contentTargets = OctoberContentTarget.find(documentText, offset)
+            .flatMap(match -> resolveContent(sourceElement, match.contentName()))
+            .map(psiFile -> new PsiElement[]{psiFile})
+            .orElse(null);
+        if (contentTargets != null) {
+            return contentTargets;
+        }
+
         PsiElement[] pageTargets = OctoberPageFilterTarget.find(documentText, offset)
             .flatMap(match -> resolvePage(sourceElement, match.pageName()))
             .map(psiFile -> new PsiElement[]{psiFile})
@@ -55,6 +71,30 @@ public final class OctoberPartialGotoDeclarationHandler implements GotoDeclarati
         }
 
         return OctoberThemePartialResolver.findPartial(Path.of(currentFile.getPath()), partialName)
+            .map(LocalFileSystem.getInstance()::findFileByNioFile)
+            .map(virtualFile -> PsiManager.getInstance(project).findFile(virtualFile));
+    }
+
+    private static java.util.Optional<PsiFile> resolveLayout(PsiElement sourceElement, String layoutName) {
+        Project project = sourceElement.getProject();
+        VirtualFile currentFile = findCurrentVirtualFile(sourceElement);
+        if (currentFile == null) {
+            return java.util.Optional.empty();
+        }
+
+        return OctoberThemeLayoutResolver.findLayout(Path.of(currentFile.getPath()), layoutName)
+            .map(LocalFileSystem.getInstance()::findFileByNioFile)
+            .map(virtualFile -> PsiManager.getInstance(project).findFile(virtualFile));
+    }
+
+    private static java.util.Optional<PsiFile> resolveContent(PsiElement sourceElement, String contentName) {
+        Project project = sourceElement.getProject();
+        VirtualFile currentFile = findCurrentVirtualFile(sourceElement);
+        if (currentFile == null) {
+            return java.util.Optional.empty();
+        }
+
+        return OctoberThemeContentResolver.findContent(Path.of(currentFile.getPath()), contentName)
             .map(LocalFileSystem.getInstance()::findFileByNioFile)
             .map(virtualFile -> PsiManager.getInstance(project).findFile(virtualFile));
     }

@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 public final class OctoberPartialCaretTarget {
     private static final Pattern PARTIAL_TAG = Pattern.compile("\\{%\\s*(?:partial|ajaxPartial)\\s+(['\"])([^'\"]+)\\1");
+    private static final Pattern PARTIAL_FUNCTION = Pattern.compile("\\b(?:partial|ajaxPartial)\\s*\\(\\s*(['\"])([^'\"]+)\\1");
 
     private OctoberPartialCaretTarget() {
     }
@@ -18,7 +19,20 @@ public final class OctoberPartialCaretTarget {
             return Optional.empty();
         }
 
-        Matcher matcher = PARTIAL_TAG.matcher(fileText);
+        Optional<Match> tagMatch = findMatch(PARTIAL_TAG, fileText, caretOffset);
+        if (tagMatch.isPresent()) {
+            return tagMatch;
+        }
+
+        return findMatch(PARTIAL_FUNCTION, fileText, caretOffset);
+    }
+
+    private static @NotNull Optional<Match> findMatch(
+        @NotNull Pattern pattern,
+        @NotNull String fileText,
+        int caretOffset
+    ) {
+        Matcher matcher = pattern.matcher(fileText);
         while (matcher.find()) {
             int start = matcher.start(2);
             int end = matcher.end(2);

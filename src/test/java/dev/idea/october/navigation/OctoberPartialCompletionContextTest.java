@@ -31,6 +31,30 @@ class OctoberPartialCompletionContextTest {
     }
 
     @Test
+    void findsPrefixInsidePartialFunctionString() {
+        String text = "{{ partial('journal/li') }}";
+        int caretOffset = text.indexOf("li") + 2;
+
+        OctoberPartialCompletionContext.Context context = OctoberPartialCompletionContext
+            .find(text, caretOffset)
+            .orElseThrow();
+
+        assertEquals("journal/li", context.prefix());
+    }
+
+    @Test
+    void findsPrefixInsideAjaxPartialFunctionString() {
+        String text = "{{ ajaxPartial(\"cou\") }}";
+        int caretOffset = text.indexOf("cou") + 3;
+
+        OctoberPartialCompletionContext.Context context = OctoberPartialCompletionContext
+            .find(text, caretOffset)
+            .orElseThrow();
+
+        assertEquals("cou", context.prefix());
+    }
+
+    @Test
     void ignoresCaretAfterPartialStringIsClosed() {
         String text = "{% partial \"journal/list\" category=category %}";
         int caretOffset = text.indexOf(" category");

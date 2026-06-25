@@ -1,10 +1,12 @@
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+
 plugins {
     id("java")
     id("org.jetbrains.intellij.platform") version "2.16.0"
 }
 
 group = "dev.idea.october"
-version = "0.1.8"
+version = "0.1.27"
 
 java {
     toolchain {
@@ -27,10 +29,13 @@ dependencies {
         }
         bundledPlugin("com.jetbrains.php")
         bundledPlugin("com.jetbrains.twig")
+        testFramework(TestFrameworkType.Platform)
     }
 
+    testImplementation("junit:junit:4.13.2")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.10.3")
 }
 
 intellijPlatform {
@@ -42,7 +47,7 @@ intellijPlatform {
         name.set("October CMS Support")
         version.set(project.version.toString())
         description.set("Base PhpStorm plugin scaffold for October CMS support.")
-        changeNotes.set("Add October CMS page filter navigation.")
+        changeNotes.set("Insert component property defaults and suppress HTML noise in property completion.")
 
         ideaVersion {
             sinceBuild.set("253")

@@ -10,6 +10,10 @@ import java.util.regex.Pattern;
 
 public final class OctoberPartialTagParser {
     private static final Pattern INLINE_PARTIAL_TAG = Pattern.compile("\\{%\\s*(?:partial|ajaxPartial)\\s+(['\"])([^'\"]+)\\1");
+    private static final Pattern INLINE_PARTIAL_FUNCTION =
+        Pattern.compile("\\b(?:partial|ajaxPartial)\\s*\\(\\s*(['\"])([^'\"]+)\\1");
+    private static final Pattern PARTIAL_FUNCTION_PREFIX =
+        Pattern.compile("(^|[^A-Za-z0-9_])(?:partial|ajaxPartial)\\s*\\(\\s*$");
     private static final Pattern WHITESPACE = Pattern.compile("\\s");
 
     private OctoberPartialTagParser() {
@@ -37,6 +41,14 @@ public final class OctoberPartialTagParser {
             }
         }
 
+        matcher = INLINE_PARTIAL_FUNCTION.matcher(elementText);
+        while (matcher.find()) {
+            String partialName = matcher.group(2);
+            if (isPlausiblePartialName(partialName)) {
+                matches.add(new Match(partialName, TextRange.create(matcher.start(2), matcher.end(2))));
+            }
+        }
+
         return matches;
     }
 
@@ -52,7 +64,7 @@ public final class OctoberPartialTagParser {
             String partialName = elementText.substring(1, elementText.length() - 1);
             if (
                 isPlausiblePartialName(partialName)
-                    && isFirstStringArgumentOfPartialTag(fileText, startOffset)
+                    && isFirstStringArgumentOfPartialReference(fileText, startOffset)
             ) {
                 matches.add(new Match(partialName, TextRange.create(1, elementText.length() - 1)));
             }
@@ -69,12 +81,17 @@ public final class OctoberPartialTagParser {
             isQuote(before)
                 && before == after
                 && isPlausiblePartialName(elementText)
-                && isFirstStringArgumentOfPartialTag(fileText, startOffset - 1)
+                && isFirstStringArgumentOfPartialReference(fileText, startOffset - 1)
         ) {
             matches.add(new Match(elementText, TextRange.create(0, elementText.length())));
         }
 
         return matches;
+    }
+
+    private static boolean isFirstStringArgumentOfPartialReference(@NotNull String fileText, int quoteStartOffset) {
+        return isFirstStringArgumentOfPartialTag(fileText, quoteStartOffset)
+            || isFirstStringArgumentOfPartialFunction(fileText, quoteStartOffset);
     }
 
     private static boolean isFirstStringArgumentOfPartialTag(@NotNull String fileText, int quoteStartOffset) {
@@ -90,6 +107,11 @@ public final class OctoberPartialTagParser {
 
         String prefix = fileText.substring(tagStart + 2, quoteStartOffset).trim();
         return "partial".equals(prefix) || "ajaxPartial".equals(prefix);
+    }
+
+    private static boolean isFirstStringArgumentOfPartialFunction(@NotNull String fileText, int quoteStartOffset) {
+        String prefix = fileText.substring(Math.max(0, quoteStartOffset - 96), quoteStartOffset);
+        return PARTIAL_FUNCTION_PREFIX.matcher(prefix).find();
     }
 
     private static boolean hasMatchingQuotes(@NotNull String value) {

@@ -79,4 +79,43 @@ class OctoberPartialTagParserTest {
         assertEquals("counter", matches.get(0).partialName());
         assertEquals(TextRange.create(1, 8), matches.get(0).rangeInElement());
     }
+
+    @Test
+    void extractsPartialReferenceFromFunctionCallText() {
+        String text = "{{ partial('journal/list-category', { category: category }) }}";
+
+        List<OctoberPartialTagParser.Match> matches = OctoberPartialTagParser.findMatches(
+            text,
+            text,
+            0,
+            text.length(),
+            false
+        );
+
+        assertEquals(1, matches.size());
+        assertEquals("journal/list-category", matches.get(0).partialName());
+        assertEquals(
+            TextRange.create(text.indexOf("journal/list-category"), text.indexOf("journal/list-category") + 21),
+            matches.get(0).rangeInElement()
+        );
+    }
+
+    @Test
+    void extractsPartialFunctionReferenceFromQuotedStringLeaf() {
+        String fileText = "{{ partial('journal/list-category', { category: category }) }}";
+        String elementText = "'journal/list-category'";
+        int startOffset = fileText.indexOf(elementText);
+
+        List<OctoberPartialTagParser.Match> matches = OctoberPartialTagParser.findMatches(
+            elementText,
+            fileText,
+            startOffset,
+            startOffset + elementText.length(),
+            true
+        );
+
+        assertEquals(1, matches.size());
+        assertEquals("journal/list-category", matches.get(0).partialName());
+        assertEquals(TextRange.create(1, 22), matches.get(0).rangeInElement());
+    }
 }

@@ -27,4 +27,29 @@ class OctoberPartialCaretTargetTest {
         assertEquals("counter", match.partialName());
         assertEquals(TextRange.create(16, 23), match.rangeInFile());
     }
+
+    @Test
+    void findsPartialNameWhenCaretIsInsidePartialFunctionPath() {
+        String text = "{{ partial('journal/list-category', { category: category }) }}";
+        int caretOffset = text.indexOf("category");
+
+        OctoberPartialCaretTarget.Match match = OctoberPartialCaretTarget.find(text, caretOffset).orElseThrow();
+
+        assertEquals("journal/list-category", match.partialName());
+        assertEquals(
+            TextRange.create(text.indexOf("journal/list-category"), text.indexOf("journal/list-category") + 21),
+            match.rangeInFile()
+        );
+    }
+
+    @Test
+    void findsPartialNameWhenCaretIsInsideAjaxPartialFunctionPath() {
+        String text = "{{ ajaxPartial(\"counter\") }}";
+        int caretOffset = text.indexOf("unt");
+
+        OctoberPartialCaretTarget.Match match = OctoberPartialCaretTarget.find(text, caretOffset).orElseThrow();
+
+        assertEquals("counter", match.partialName());
+        assertEquals(TextRange.create(text.indexOf("counter"), text.indexOf("counter") + 7), match.rangeInFile());
+    }
 }
