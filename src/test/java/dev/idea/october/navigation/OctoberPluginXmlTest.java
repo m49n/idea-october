@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -42,5 +43,13 @@ class OctoberPluginXmlTest {
 
         assertTrue(hasFirstOctoberXmlContributor);
         assertTrue(hasFirstOctoberHtmlContributor);
+    }
+
+    @Test
+    void keepsGithubBuildCompatibilityOpenEnded() throws Exception {
+        String buildFile = Files.readString(Path.of("build.gradle.kts"));
+
+        assertTrue(buildFile.contains("sinceBuild.set(\"253\")"));
+        assertTrue(!buildFile.contains("untilBuild.set("));
     }
 }

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dev.idea.october"
-version = "0.1.29"
+version = "0.1.30"
 
 java {
     toolchain {
@@ -47,11 +47,10 @@ intellijPlatform {
         name.set("October CMS Support")
         version.set(project.version.toString())
         description.set("Base PhpStorm plugin scaffold for October CMS support.")
-        changeNotes.set("Show component property metadata and prioritize October property completion.")
+        changeNotes.set("Remove upper IDE build bound for GitHub distribution builds.")
 
         ideaVersion {
             sinceBuild.set("253")
-            untilBuild.set("253.*")
         }
 
         vendor {
