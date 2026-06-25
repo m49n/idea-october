@@ -72,7 +72,7 @@ The plugin opens the matching PHP component class.
 
 can suggest aliases such as `PressCenterPosts`.
 
-- Component completion shows the owning plugin on the right, for example `Webinsane.Bcc` or `acme.blog`.
+- Component completion shows the owning plugin on the right, for example `Webinsane.Pages` or `acme.blog`.
 
 - Unknown component aliases are highlighted in page configuration blocks.
 
