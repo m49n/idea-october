@@ -19,6 +19,27 @@ class OctoberComponentBlockParserTest {
     }
 
     @Test
+    void usesComponentNameWhenComponentBlockHasPageAlias() {
+        String text = "url = \"/\"\n[breadcrumbs breadcrumbsc]\nmain-ol-class = \"breadcrumbs__list\"\n==";
+        int caretOffset = text.indexOf("breadcrumbsc") + 5;
+
+        OctoberComponentBlockParser.Match match = OctoberComponentBlockParser.find(text, caretOffset).orElseThrow();
+
+        assertEquals("breadcrumbs", match.alias());
+        assertEquals("breadcrumbs", match.rangeInFile().substring(text));
+    }
+
+    @Test
+    void scansComponentNameWhenComponentBlockHasPageAlias() {
+        String text = "url = \"/\"\n[breadcrumbs breadcrumbsc]\nmain-ol-class = \"breadcrumbs__list\"\n==";
+
+        OctoberComponentBlockParser.Match match = OctoberComponentBlockParser.scan(text).getFirst();
+
+        assertEquals("breadcrumbs", match.alias());
+        assertEquals("breadcrumbs", match.rangeInFile().substring(text));
+    }
+
+    @Test
     void ignoresBracketTextAfterMarkupSectionStarts() {
         String text = "url = \"/journal\"\n==\n<div>[PressCenterPosts]</div>";
         int caretOffset = text.indexOf("Center");

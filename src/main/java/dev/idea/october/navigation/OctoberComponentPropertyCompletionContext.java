@@ -8,8 +8,12 @@ import java.util.regex.Pattern;
 
 public final class OctoberComponentPropertyCompletionContext {
     private static final String INTELLIJ_DUMMY_IDENTIFIER = "IntellijIdeaRulezzz";
-    private static final Pattern COMPONENT_BLOCK = Pattern.compile("(?m)^[\\t ]*\\[([A-Za-z_][A-Za-z0-9_]*)][\\t ]*$");
-    private static final Pattern PROPERTY_KEY_PREFIX = Pattern.compile("^\\s*([A-Za-z_][A-Za-z0-9_]*)?$");
+    private static final String COMPONENT_IDENTIFIER = "[A-Za-z_][A-Za-z0-9_]*";
+    private static final String PROPERTY_IDENTIFIER = "[A-Za-z_][A-Za-z0-9_-]*";
+    private static final Pattern COMPONENT_BLOCK = Pattern.compile(
+        "(?m)^[\\t ]*\\[(" + COMPONENT_IDENTIFIER + ")(?:[\\t ]+(" + COMPONENT_IDENTIFIER + "))?][\\t ]*$"
+    );
+    private static final Pattern PROPERTY_KEY_PREFIX = Pattern.compile("^\\s*(" + PROPERTY_IDENTIFIER + ")?$");
 
     private OctoberComponentPropertyCompletionContext() {
     }

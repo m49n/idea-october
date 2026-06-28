@@ -9,8 +9,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class OctoberComponentPropertyAssignmentScanner {
-    private static final Pattern COMPONENT_BLOCK = Pattern.compile("^\\s*\\[([A-Za-z_][A-Za-z0-9_]*)]\\s*$");
-    private static final Pattern PROPERTY_ASSIGNMENT = Pattern.compile("^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*=");
+    private static final String COMPONENT_IDENTIFIER = "[A-Za-z_][A-Za-z0-9_]*";
+    private static final String PROPERTY_IDENTIFIER = "[A-Za-z_][A-Za-z0-9_-]*";
+    private static final Pattern COMPONENT_BLOCK = Pattern.compile(
+        "^\\s*\\[(" + COMPONENT_IDENTIFIER + ")(?:\\s+(" + COMPONENT_IDENTIFIER + "))?]\\s*$"
+    );
+    private static final Pattern PROPERTY_ASSIGNMENT = Pattern.compile("^\\s*(" + PROPERTY_IDENTIFIER + ")\\s*=");
 
     private OctoberComponentPropertyAssignmentScanner() {
     }

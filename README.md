@@ -56,6 +56,14 @@ Resolves to `themes/<theme>/partials/counter.htm`.
 [PressCenterPosts]
 ```
 
+Also supports October page aliases on component blocks:
+
+```ini
+[breadcrumbs breadcrumbsc]
+```
+
+In this form the plugin resolves `breadcrumbs` as the real component alias for navigation, property completion, and property inspections.
+
 Resolves registered component aliases from plugin `Plugin.php` files, including entries like:
 
 ```php

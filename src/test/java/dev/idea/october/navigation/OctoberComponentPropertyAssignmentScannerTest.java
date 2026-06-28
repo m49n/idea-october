@@ -35,4 +35,27 @@ class OctoberComponentPropertyAssignmentScannerTest {
         );
         assertEquals("missing", assignments.get(1).rangeInFile().substring(text));
     }
+
+    @Test
+    void scansAssignmentsUnderComponentBlockWithPageAliasUsingComponentName() {
+        String text = """
+            [breadcrumbs breadcrumbsc]
+            main-ol-class = "breadcrumbs__list"
+            active-class = "breadcrumbs__item--current"
+            ==
+            """;
+
+        List<OctoberComponentPropertyAssignmentScanner.Assignment> assignments =
+            OctoberComponentPropertyAssignmentScanner.scan(text);
+
+        assertEquals(
+            List.of(
+                "breadcrumbs:main-ol-class",
+                "breadcrumbs:active-class"
+            ),
+            assignments.stream()
+                .map(assignment -> assignment.componentAlias() + ":" + assignment.propertyName())
+                .toList()
+        );
+    }
 }

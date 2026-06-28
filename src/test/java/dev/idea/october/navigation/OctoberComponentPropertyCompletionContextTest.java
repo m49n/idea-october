@@ -25,6 +25,41 @@ class OctoberComponentPropertyCompletionContextTest {
     }
 
     @Test
+    void usesComponentNameForPropertiesWhenComponentBlockHasPageAlias() {
+        String text = """
+            url = "/"
+            [breadcrumbs breadcrumbsc]
+            main
+            ==
+            """;
+        int caretOffset = text.indexOf("main") + 4;
+
+        OctoberComponentPropertyCompletionContext.Context context = OctoberComponentPropertyCompletionContext
+            .find(text, caretOffset)
+            .orElseThrow();
+
+        assertEquals("breadcrumbs", context.componentAlias());
+        assertEquals("main", context.prefix());
+    }
+
+    @Test
+    void allowsHyphenatedPropertyPrefix() {
+        String text = """
+            [breadcrumbs breadcrumbsc]
+            main-ol
+            ==
+            """;
+        int caretOffset = text.indexOf("main-ol") + 7;
+
+        OctoberComponentPropertyCompletionContext.Context context = OctoberComponentPropertyCompletionContext
+            .find(text, caretOffset)
+            .orElseThrow();
+
+        assertEquals("breadcrumbs", context.componentAlias());
+        assertEquals("main-ol", context.prefix());
+    }
+
+    @Test
     void findsEmptyPropertyPrefixInsideCurrentComponentBlock() {
         String text = """
             url = "/journal"

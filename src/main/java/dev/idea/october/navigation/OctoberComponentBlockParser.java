@@ -10,7 +10,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class OctoberComponentBlockParser {
-    private static final Pattern COMPONENT_BLOCK = Pattern.compile("(?m)^\\s*\\[([A-Za-z_][A-Za-z0-9_]*)]\\s*$");
+    private static final String COMPONENT_IDENTIFIER = "[A-Za-z_][A-Za-z0-9_]*";
+    private static final Pattern COMPONENT_BLOCK = Pattern.compile(
+        "(?m)^[\\t ]*\\[(" + COMPONENT_IDENTIFIER + ")(?:[\\t ]+(" + COMPONENT_IDENTIFIER + "))?][\\t ]*$"
+    );
 
     private OctoberComponentBlockParser() {
     }
@@ -30,10 +33,15 @@ public final class OctoberComponentBlockParser {
 
         Matcher matcher = COMPONENT_BLOCK.matcher(fileText.substring(0, configEnd));
         while (matcher.find()) {
-            int start = matcher.start(1);
-            int end = matcher.end(1);
-            if (caretOffset >= start && caretOffset <= end) {
-                return Optional.of(new Match(matcher.group(1), TextRange.create(start, end)));
+            int componentStart = matcher.start(1);
+            int componentEnd = matcher.end(1);
+            int pageAliasStart = matcher.start(2);
+            int pageAliasEnd = matcher.end(2);
+            if (
+                isInside(caretOffset, componentStart, componentEnd)
+                    || (pageAliasStart >= 0 && isInside(caretOffset, pageAliasStart, pageAliasEnd))
+            ) {
+                return Optional.of(new Match(matcher.group(1), TextRange.create(componentStart, componentEnd)));
             }
         }
 
@@ -56,6 +64,10 @@ public final class OctoberComponentBlockParser {
         }
 
         return matches;
+    }
+
+    private static boolean isInside(int offset, int start, int end) {
+        return offset >= start && offset <= end;
     }
 
     public record Match(@NotNull String alias, @NotNull TextRange rangeInFile) {
