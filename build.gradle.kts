@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dev.idea.october"
-version = "0.1.33"
+version = "0.1.34"
 
 java {
     toolchain {
@@ -48,7 +48,7 @@ intellijPlatform {
         name.set("October CMS Support")
         version.set(project.version.toString())
         description.set("Base PhpStorm plugin scaffold for October CMS support.")
-        changeNotes.set("Support navigation from quoted and unquoted Tailor component handles to YAML blueprints.")
+        changeNotes.set("Add scoped Twig variables, October filters and page property completion with automatic popups.")
 
         ideaVersion {
             sinceBuild.set("253")

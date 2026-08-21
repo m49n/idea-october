@@ -58,11 +58,17 @@ public final class OctoberPhpSectionTypedHandler extends TypedHandlerDelegate {
     }
 
     private static boolean shouldAutoPopup(char character, Editor editor, int caretOffset) {
-        if (!isCompletionTrigger(character)) {
-            return false;
+        String documentText = editor.getDocument().getText();
+        boolean existingContext = OctoberPhpSectionCompletionContext.find(documentText, caretOffset).isPresent()
+            || OctoberComponentCompletionContext.find(documentText, caretOffset).isPresent()
+            || OctoberComponentPropertyCompletionContext.find(documentText, caretOffset).isPresent();
+        if (existingContext && isExistingCompletionTrigger(character)) {
+            return true;
         }
 
-        return hasAutoPopupCompletionContext(editor);
+        boolean twigContext = OctoberTwigTagCompletionContext.find(documentText, caretOffset).isPresent()
+            || OctoberTwigExpressionCompletionContext.find(documentText, caretOffset).isPresent();
+        return twigContext && isTwigCompletionTrigger(character);
     }
 
     private static boolean hasAutoPopupCompletionContext(Editor editor) {
@@ -70,15 +76,24 @@ public final class OctoberPhpSectionTypedHandler extends TypedHandlerDelegate {
         int caretOffset = editor.getCaretModel().getOffset();
         return OctoberPhpSectionCompletionContext.find(documentText, caretOffset).isPresent()
             || OctoberComponentCompletionContext.find(documentText, caretOffset).isPresent()
-            || OctoberComponentPropertyCompletionContext.find(documentText, caretOffset).isPresent();
+            || OctoberComponentPropertyCompletionContext.find(documentText, caretOffset).isPresent()
+            || OctoberTwigTagCompletionContext.find(documentText, caretOffset).isPresent()
+            || OctoberTwigExpressionCompletionContext.find(documentText, caretOffset).isPresent();
     }
 
-    private static boolean isCompletionTrigger(char character) {
+    private static boolean isExistingCompletionTrigger(char character) {
         return Character.isLetterOrDigit(character)
             || character == '_'
             || character == '$'
             || character == '>'
             || character == '-'
             || character == '[';
+    }
+
+    private static boolean isTwigCompletionTrigger(char character) {
+        return Character.isLetter(character)
+            || character == '_'
+            || character == '|'
+            || character == '.';
     }
 }

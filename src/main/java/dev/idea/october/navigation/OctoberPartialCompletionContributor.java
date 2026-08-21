@@ -14,7 +14,9 @@ import com.intellij.psi.PsiFile;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class OctoberPartialCompletionContributor extends CompletionContributor {
     @Override
@@ -28,6 +30,7 @@ public final class OctoberPartialCompletionContributor extends CompletionContrib
                 || OctoberComponentCompletionContext.find(documentText, context.getStartOffset()).isPresent()
                 || OctoberComponentPropertyCompletionContext.find(documentText, context.getStartOffset()).isPresent()
                 || OctoberTwigTagCompletionContext.find(documentText, context.getStartOffset()).isPresent()
+                || OctoberTwigExpressionCompletionContext.find(documentText, context.getStartOffset()).isPresent()
         ) {
             if (!context.getDummyIdentifier().isEmpty()) {
                 context.setDummyIdentifier("");
@@ -90,6 +93,14 @@ public final class OctoberPartialCompletionContributor extends CompletionContrib
 
         OctoberTwigTagCompletionContext.find(documentText, parameters.getOffset())
             .ifPresent(context -> addTwigTagCompletions(result, context.prefix()));
+
+        OctoberTwigExpressionCompletionContext.find(documentText, parameters.getOffset())
+            .ifPresent(context -> addTwigExpressionCompletions(
+                result,
+                context,
+                documentText,
+                parameters.getOffset()
+            ));
 
         super.fillCompletionVariants(parameters, result);
     }
@@ -355,6 +366,47 @@ public final class OctoberPartialCompletionContributor extends CompletionContrib
         int tailOffset = context.getTailOffset();
         context.getDocument().insertString(tailOffset, tag.tailText());
         context.getEditor().getCaretModel().moveToOffset(tailOffset + tag.caretShift());
+    }
+
+    private static void addTwigExpressionCompletions(
+        CompletionResultSet result,
+        OctoberTwigExpressionCompletionContext.Context context,
+        String documentText,
+        int caretOffset
+    ) {
+        CompletionResultSet prefixedResult = result.withPrefixMatcher(context.prefix()).caseInsensitive();
+        switch (context.kind()) {
+            case FILTER -> addNamedCompletions(
+                prefixedResult,
+                OctoberTwigCompletionCatalog.filters(),
+                "October filter"
+            );
+            case THIS_PROPERTY -> addNamedCompletions(
+                prefixedResult,
+                OctoberTwigCompletionCatalog.thisProperties(),
+                "October page property"
+            );
+            case VARIABLE -> {
+                Set<String> variables = new LinkedHashSet<>(
+                    OctoberTwigScopeScanner.visibleVariables(documentText, caretOffset)
+                );
+                variables.add("this");
+                addNamedCompletions(prefixedResult, variables, "Twig variable");
+            }
+        }
+    }
+
+    private static void addNamedCompletions(
+        CompletionResultSet result,
+        Iterable<String> names,
+        String typeText
+    ) {
+        for (String name : names) {
+            result.addElement(
+                LookupElementBuilder.create(name)
+                    .withTypeText(typeText, true)
+            );
+        }
     }
 
     private static VirtualFile findCurrentVirtualFile(PsiElement position) {
