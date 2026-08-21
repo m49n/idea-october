@@ -57,6 +57,14 @@ public final class OctoberPartialGotoDeclarationHandler implements GotoDeclarati
             return pageTargets;
         }
 
+        PsiElement[] tailorBlueprintTargets = OctoberTailorComponentTarget.find(documentText, offset)
+            .flatMap(match -> resolveTailorBlueprint(sourceElement, match.handle()))
+            .map(psiFile -> new PsiElement[]{psiFile})
+            .orElse(null);
+        if (tailorBlueprintTargets != null) {
+            return tailorBlueprintTargets;
+        }
+
         return OctoberComponentBlockParser.find(documentText, offset)
             .flatMap(match -> resolveComponent(sourceElement, match.alias()))
             .map(psiFile -> new PsiElement[]{psiFile})
@@ -107,6 +115,18 @@ public final class OctoberPartialGotoDeclarationHandler implements GotoDeclarati
         }
 
         return OctoberThemePageResolver.findPage(Path.of(currentFile.getPath()), pageName)
+            .map(LocalFileSystem.getInstance()::findFileByNioFile)
+            .map(virtualFile -> PsiManager.getInstance(project).findFile(virtualFile));
+    }
+
+    private static java.util.Optional<PsiFile> resolveTailorBlueprint(PsiElement sourceElement, String handle) {
+        Project project = sourceElement.getProject();
+        VirtualFile currentFile = findCurrentVirtualFile(sourceElement);
+        if (currentFile == null) {
+            return java.util.Optional.empty();
+        }
+
+        return OctoberTailorBlueprintResolver.findBlueprint(project, Path.of(currentFile.getPath()), handle)
             .map(LocalFileSystem.getInstance()::findFileByNioFile)
             .map(virtualFile -> PsiManager.getInstance(project).findFile(virtualFile));
     }

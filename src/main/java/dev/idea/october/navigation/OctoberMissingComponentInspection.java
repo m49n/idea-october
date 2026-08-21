@@ -34,7 +34,10 @@ public final class OctoberMissingComponentInspection extends LocalInspectionTool
         }
 
         for (OctoberComponentBlockParser.Match match : OctoberComponentBlockParser.scan(file.getText())) {
-            if (OctoberComponentAliasProvider.hasComponentAlias(currentFile, match.alias())) {
+            if (
+                OctoberTailorComponentTarget.isTailorComponentAlias(match.alias())
+                    || OctoberComponentAliasProvider.hasComponentAlias(currentFile, match.alias())
+            ) {
                 continue;
             }
 

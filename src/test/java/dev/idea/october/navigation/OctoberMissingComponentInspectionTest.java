@@ -58,4 +58,23 @@ public class OctoberMissingComponentInspectionTest extends BasePlatformTestCase 
 
         assertEquals(1, count);
     }
+
+    public void testDoesNotReportBuiltInTailorComponentsAsMissing() {
+        myFixture.enableInspections(new OctoberMissingComponentInspection());
+
+        PsiFile page = myFixture.addFileToProject("themes/bcc/pages/blog.htm", """
+            [collection posts]
+            handle = "Blog\\Post"
+
+            [section post]
+            handle = "Blog\\Post"
+
+            [global config]
+            handle = "Site\\Config"
+            ==
+            """);
+        myFixture.configureFromExistingVirtualFile(page.getVirtualFile());
+
+        myFixture.checkHighlighting();
+    }
 }

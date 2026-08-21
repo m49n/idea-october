@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "dev.idea.october"
-version = "0.1.31"
+version = "0.1.33"
 
 java {
     toolchain {
@@ -29,6 +29,7 @@ dependencies {
         }
         bundledPlugin("com.jetbrains.php")
         bundledPlugin("com.jetbrains.twig")
+        bundledPlugin("org.jetbrains.plugins.yaml")
         testFramework(TestFrameworkType.Platform)
     }
 
@@ -47,7 +48,7 @@ intellijPlatform {
         name.set("October CMS Support")
         version.set(project.version.toString())
         description.set("Base PhpStorm plugin scaffold for October CMS support.")
-        changeNotes.set("Support October CMS component blocks with page aliases.")
+        changeNotes.set("Support navigation from quoted and unquoted Tailor component handles to YAML blueprints.")
 
         ideaVersion {
             sinceBuild.set("253")
