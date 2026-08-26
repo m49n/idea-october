@@ -66,9 +66,14 @@ public final class OctoberPhpSectionTypedHandler extends TypedHandlerDelegate {
             return true;
         }
 
+        java.util.Optional<OctoberTwigExpressionCompletionContext.Context> expressionContext =
+            OctoberTwigExpressionCompletionContext.find(documentText, caretOffset);
         boolean twigContext = OctoberTwigTagCompletionContext.find(documentText, caretOffset).isPresent()
-            || OctoberTwigExpressionCompletionContext.find(documentText, caretOffset).isPresent();
-        return twigContext && isTwigCompletionTrigger(character);
+            || expressionContext.isPresent();
+        return twigContext && (
+            isTwigCompletionTrigger(character)
+                || isFilterWhitespaceTrigger(character, expressionContext)
+        );
     }
 
     private static boolean hasAutoPopupCompletionContext(Editor editor) {
@@ -95,5 +100,13 @@ public final class OctoberPhpSectionTypedHandler extends TypedHandlerDelegate {
             || character == '_'
             || character == '|'
             || character == '.';
+    }
+
+    private static boolean isFilterWhitespaceTrigger(
+        char character,
+        java.util.Optional<OctoberTwigExpressionCompletionContext.Context> context
+    ) {
+        return character == ' '
+            && context.filter(value -> value.kind() == OctoberTwigExpressionCompletionContext.Kind.FILTER).isPresent();
     }
 }

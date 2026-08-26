@@ -39,6 +39,9 @@
             implementation="dev.idea.october.navigation.OctoberPhpSectionEnterHandler" />
         <typedHandler
             implementation="dev.idea.october.navigation.OctoberPhpSectionTypedHandler" />
+        <lookup.charFilter
+            implementation="dev.idea.october.navigation.OctoberTwigFilterSpaceCharFilter"
+            order="first" />
         <localInspection
             language="XML"
             shortName="OctoberMissingThemeFile"

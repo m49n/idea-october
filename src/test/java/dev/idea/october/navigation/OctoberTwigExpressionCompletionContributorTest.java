@@ -113,6 +113,20 @@ public class OctoberTwigExpressionCompletionContributorTest extends BasePlatform
         assertTrue(activeLookupStrings().contains("page"));
     }
 
+    public void testTypingSpaceAfterPipeDoesNotInsertSelectedFilter() {
+        configurePage("{{ value <caret> }}");
+
+        myFixture.type('|');
+        assertFocusedLookup();
+        myFixture.type(' ');
+        PlatformTestUtil.dispatchAllInvocationEventsInIdeEventQueue();
+
+        String documentText = myFixture.getEditor().getDocument().getText();
+        assertTrue(documentText.contains("{{ value |  }}"));
+        assertFalse(documentText.contains("|app"));
+        assertFocusedLookup();
+    }
+
     public void testTypingDotAfterThisOpensFocusedPropertyCompletionPopup() {
         configurePage("{{ this<caret> }}");
 
